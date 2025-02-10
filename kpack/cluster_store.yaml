@@ -1,0 +1,7 @@
+apiVersion: kpack.io/v1alpha2
+kind: ClusterStore
+metadata:
+  name: schematic-buildpacks
+spec:
+  sources:
+  - image: quay.io/metasync/schematic_buildpack_python_uv:0.1.0

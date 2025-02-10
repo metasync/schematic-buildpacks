@@ -1,0 +1,5 @@
+[buildpack]
+uri = "../buildpacks/python-uv"
+
+[platform]
+os = "linux"

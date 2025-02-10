@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# 1. CHECK IF APPLICABLE
+if [[ ! -f "pyproject.toml" && \
+      ! -f "requirements.txt" && \
+      ! -f "Pipfile" ]]; then
+  echo "No Python app detected"
+  exit 100
+fi
+
+echo "Python app detected"
+
+# 2. GET ARGS
+build_plan_path="${CNB_BUILD_PLAN_PATH}"
+
+# 3. GET CONFIGURATION
+python_version="3.12"
+if [[ -f ".python-version" ]]; then
+  python_version=$(cat .python-version | tr -d '[:space:]')
+fi
+
+# 4. DECLARE DEPENDENCIES
+cat > "${build_plan_path}" <<EOF
+[[provides]]
+name = "python"
+
+[[requires]]
+name = "python"
+
+[requires.metadata]
+version = "${python_version}"
+version-source = ".python-version"
+
+[[provides]]
+name = "uv"
+
+[[requires]]
+name = "uv"
+
+EOF
+
+if [[ -f "Pipfile" ]]; then
+  cat >> "${build_plan_path}" <<EOF
+[[provides]]
+name = "pipenv"
+
+[[requires]]
+name = "pipenv"
+
+EOF
+fi
+
+exit 0

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+pack builder create quay.io/metasync/schematic_builder --config ./builder.toml --target "linux/amd64" --publish

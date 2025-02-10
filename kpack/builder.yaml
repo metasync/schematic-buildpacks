@@ -1,0 +1,18 @@
+apiVersion: kpack.io/v1alpha2
+kind: Builder
+metadata:
+  name: schematic-builder
+  namespace: kpack
+spec:
+  serviceAccountName: kpack-sa
+  tag: quay.io/metasync/schematic_builder:al2023
+  stack:
+    name: schematic-base
+    kind: ClusterStack
+  store:
+    name: schematic-buildpacks
+    kind: ClusterStore
+  order:
+    - group:
+      - id: schematic/python-uv
+        # version: "0.1.0"

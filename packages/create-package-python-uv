@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+pack buildpack package quay.io/metasync/schematic_buildpack_python_uv:0.1.0 --config ./package-python-uv.toml --target "linux/amd64" --publish

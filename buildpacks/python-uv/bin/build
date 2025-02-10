@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "---> Python Buildpack with uv"
+
+# Set up environment variables
+layers_dir="${CNB_LAYERS_DIR}"
+platform_dir="${CNB_PLATFORM_DIR}"
+bp_plan_path="${CNB_BP_PLAN_PATH}"
+
+# Read the Python version from the build plan
+python_version=$(yj -t < "${bp_plan_path}" | jq -r '.entries[] | select(.name == "python") | .metadata.version // "3.12"')
+echo "-----> Using Python version: ${python_version}"
+
+# Setup the Python layer
+python_layer="${layers_dir}/python"
+python_dir=${python_layer}
+python_install_dir="${python_dir}"
+export UV_PYTHON_INSTALL_DIR=${python_install_dir}
+mkdir -p "${python_dir}"
+
+# Install Python via uv
+if ! compgen -G "${python_install_dir}/*-${python_version}*/bin/python*"; then
+  echo "-----> Installing Python ${python_version}"
+  uv python install ${python_version}
+  echo "-----> Installed Python ${python_version}"
+else
+  echo "-----> Python ${python_version} already installed"
+fi
+
+# Configure Python layer usage
+cat > "${python_dir}.toml" <<EOF
+[types]
+launch = true
+cache = true
+build = true
+EOF
+
+# Write the Python layer launch.toml file
+cat > "${python_dir}/launch.toml" <<EOF
+[[labels]]
+key = "io.buildpacks.schematic.python_uv.python_version"
+value = "${python_version}"
+EOF
+
+# Setup the virtual environment layer
+venv_layer="${layers_dir}/venv"
+venv_dir="${venv_layer}"
+export VIRTUAL_ENV="${venv_dir}"
+mkdir -p "${venv_layer}"
+
+# Setup the uv cache layer
+cache_layer="${layers_dir}/cache"
+cache_dir="${cache_layer}"
+export UV_CACHE_DIR="${cache_dir}"
+mkdir -p "${cache_layer}"
+
+uv venv ${venv_dir}
+source "${venv_dir}/bin/activate"
+
+# Install 'pipenv' (for Pipfile support) if required
+pipenv_required=$(yj -t < "${bp_plan_path}" | jq -r '.entries[] | select(.name == "pipenv")| .name')
+if [[ -z ${pipenv_required} ]]; then
+  echo "-----> Installing uv and pipenv"
+  uv pip install pipenv
+fi
+
+# Install dependencies using `uv` based on the detected file
+if [[ -f "requirements.txt" ]]; then
+  echo "-----> Installing dependencies from requirements.txt"
+  uv pip install -r requirements.txt
+elif [[ -f "Pipfile" ]]; then
+  echo "-----> Converting Pipfile to requirements.txt"
+  pipenv requirements > requirements.txt
+  echo "-----> Installing dependencies from requirements.txt"
+  uv pip install -r requirements.txt
+elif [[ -f "pyproject.toml" ]]; then
+  echo "-----> Installing dependencies from pyproject.toml"
+  uv pip install -e .
+fi
+
+# Prune unreachable objects from the uv cache
+uv cache prune
+
+# Configure virtual environment layer usage
+cat > "${venv_dir}.toml" <<EOF
+[types]
+launch = true
+cache = true
+build = true
+EOF
+
+# Configure uv cache layer usage
+cat > "${cache_dir}.toml" <<EOF
+[types]
+launch = true
+cache = true
+build = true
+EOF
+
+# Write the launch.toml file
+# cat > "${layers_dir}/launch.toml" <<EOF
+# [[processes]]
+# type = "web"
+# command = "${venv_dir}/bin/python app.py"
+# EOF

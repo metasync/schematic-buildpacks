@@ -1,0 +1,53 @@
+ARG base_image=public.ecr.aws/amazonlinux/amazonlinux
+ARG base_tag=2023-minimal
+# ARG base_tag=2023
+FROM ${base_image}:${base_tag} AS base
+
+RUN dnf -y update && \
+    dnf install -y jq vim-minimal which && \
+    # dnf groupinstall -y "Development Tools" && \
+    dnf clean all
+
+FROM base AS build
+
+ARG uv_version=0.5.26
+ARG yj_version=5.1.0
+RUN dnf install -y go tar gzip && \
+    dnf clean all && \
+    go install github.com/sclevine/yj/v5@v${yj_version} && \
+    curl -LsSf https://astral.sh/uv/${uv_version}/install.sh | sh
+
+FROM base AS release
+
+# Set required CNB user information
+ARG cnb_uid=1000
+ARG cnb_gid=1000
+ARG cnb_user=schematic
+
+# Setup user
+ENV CNB_USER_ID=${cnb_uid}
+ENV CNB_GROUP_ID=${cnb_gid}
+ENV CNB_USER=${cnb_user}
+ENV CNB_HOME=/home/${CNB_USER}
+WORKDIR ${CNB_HOME}
+
+COPY --from=build /root/go/bin/yj /usr/local/bin/yj
+COPY --from=build /root/.local/bin ${CNB_HOME}/.local/bin
+
+RUN chown -R ${CNB_USER_ID}:${CNB_GROUP_ID} ${CNB_HOME} && \
+    chmod -R g=u ${CNB_HOME}
+
+# Set user and group
+USER ${CNB_USER_ID}:${CNB_GROUP_ID}
+
+ENV PS1="${CNB_USER}@\h \w \$ "
+ENV PATH="${CNB_HOME}/.local/bin:$PATH"
+ENV HOME=${CNB_HOME}
+
+# Set required CNB target information
+LABEL io.buildpacks.base.distro.name="amzn"
+LABEL io.buildpacks.base.distro.version="2023"
+LABEL io.buildpacks.stack.id="io.buildpacks.stacks.schematic"
+
+# Info about toolset available
+LABEL io.buildpacks.base.toolset.uv.version=${uv_version}
