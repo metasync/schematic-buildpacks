@@ -3,6 +3,11 @@ ARG base_tag=2023-minimal
 # ARG base_tag=2023
 FROM ${base_image}:${base_tag} AS base
 
+ARG uv_version=0.6.2
+ARG yj_version=5.1.0
+ENV UV_VERSION=${uv_version}
+ENV YJ_VERSION=${yj_version}
+
 RUN dnf -y update && \
     dnf install -y jq vim-minimal which && \
     # dnf groupinstall -y "Development Tools" && \
@@ -10,12 +15,10 @@ RUN dnf -y update && \
 
 FROM base AS build
 
-ARG uv_version=0.5.26
-ARG yj_version=5.1.0
 RUN dnf install -y go tar gzip && \
     dnf clean all && \
-    go install github.com/sclevine/yj/v5@v${yj_version} && \
-    curl -LsSf https://astral.sh/uv/${uv_version}/install.sh | sh
+    go install github.com/sclevine/yj/v5@v${YJ_VERSION} && \
+    curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
 
 FROM base AS release
 
@@ -47,7 +50,8 @@ ENV HOME=${CNB_HOME}
 # Set required CNB target information
 LABEL io.buildpacks.base.distro.name="amzn"
 LABEL io.buildpacks.base.distro.version="2023"
-LABEL io.buildpacks.stack.id="io.buildpacks.stacks.schematic"
+LABEL io.buildpacks.stack.id="io.buildpacks.stacks.schematic.base"
 
 # Info about toolset available
-LABEL io.buildpacks.base.toolset.uv.version=${uv_version}
+LABEL io.buildpacks.base.toolset.uv.version=${UV_VERSION}
+LABEL io.buildpacks.base.toolset.yj.version=${YJ_VERSION}

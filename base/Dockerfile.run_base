@@ -28,4 +28,4 @@ ENV HOME=${CNB_HOME}
 # Set required CNB target information
 LABEL io.buildpacks.base.distro.name="amzn"
 LABEL io.buildpacks.base.distro.version="2023"
-LABEL io.buildpacks.stack.id="io.buildpacks.stacks.schematic"
+LABEL io.buildpacks.stack.id="io.buildpacks.stacks.schematic.base"
