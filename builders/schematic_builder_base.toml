@@ -1,0 +1,23 @@
+# Buildpacks to include in builder
+[[buildpacks]]
+id = "schematic/base"
+uri = "../buildpacks/base"
+
+# Order used for detection
+[[order]]
+  [[order.group]]
+  id = "schematic/base"
+
+# Base images used to create the builder
+[build]
+image = "quay.io/metasync/schematic_buildpacks_build_base:al2023"
+
+[run]
+  [[run.images]]
+  image = "quay.io/metasync/schematic_buildpacks_run_base:al2023"
+
+# Stack (deprecated) used to create the builder
+# [stack]
+# id = "io.buildpacks.stacks.schematic.base"
+# build-image = "quay.io/metasync/schematic_buildpacks_build_base:al2023"
+# run-image = "quay.io/metasync/schematic_buildpacks_run_base:al2023"

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Custom launcher to execute the command directly
+exec "$@"
