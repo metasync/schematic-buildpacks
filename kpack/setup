@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+kubectl apply -f quay_registry_credentials.yaml
+kubectl apply -f service_account.yaml
+kubectl apply -f cluster_store.yaml
+kubectl apply -f cluster_stacks/schematic_base.yaml
+kubectl apply -f cluster_builders/schematic_base.yaml

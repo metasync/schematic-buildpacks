@@ -4,4 +4,4 @@ metadata:
   name: schematic-buildpacks
 spec:
   sources:
-  - image: quay.io/metasync/schematic_buildpack_python_uv:0.1.0
+    - image: quay.io/metasync/schematic_buildpack_base:0.1.1

@@ -1,11 +1,12 @@
 apiVersion: kpack.io/v1alpha2
-kind: Builder
+kind: ClusterBuilder
 metadata:
   name: schematic-base
-  namespace: kpack
 spec:
-  serviceAccountName: kpack-sa
-  tag: quay.io/metasync/schematic_builder:al2023
+  serviceAccountRef: 
+    name: kpack-sa
+    namespace: kpack
+  tag: quay.io/metasync/schematic_builder_base:al2023
   stack:
     name: schematic-base
     kind: ClusterStack

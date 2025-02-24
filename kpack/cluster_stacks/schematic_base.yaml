@@ -1,0 +1,10 @@
+apiVersion: kpack.io/v1alpha2
+kind: ClusterStack
+metadata:
+  name: schematic-base
+spec:
+  id: "io.buildpacks.stacks.schematic.base"
+  buildImage:
+    image: "quay.io/metasync/schematic_buildpacks_build_base:al2023"
+  runImage:
+    image: "quay.io/metasync/schematic_buildpacks_run_base:al2023"
