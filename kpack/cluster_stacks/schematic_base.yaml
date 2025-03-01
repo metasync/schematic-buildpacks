@@ -2,6 +2,7 @@ apiVersion: kpack.io/v1alpha2
 kind: ClusterStack
 metadata:
   name: schematic-base
+  namespace: kpack
 spec:
   id: "io.buildpacks.stacks.schematic.base"
   buildImage:

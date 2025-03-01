@@ -2,6 +2,7 @@ apiVersion: kpack.io/v1alpha2
 kind: ClusterBuilder
 metadata:
   name: schematic-base
+  namespace: kpack
 spec:
   serviceAccountRef: 
     name: kpack-sa
