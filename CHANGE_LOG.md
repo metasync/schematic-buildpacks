@@ -1,3 +1,8 @@
+## [0.1.3] (2025-03-01)
+  
+  * Added kpack namespace
+  * Refactored kpack setup accordingly
+
 ## [0.1.2] (2025-02-24)
 
   * Refactored buildpack
