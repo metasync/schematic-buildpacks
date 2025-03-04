@@ -1,0 +1,24 @@
+data:
+  resource.customizations.health.kpack.io_Image: |
+    hs = {}
+    if obj.status == nil then
+      hs.status = "Progressing"
+      hs.message = "Image status is unknown"
+      return hs
+    end
+    for _, condition in ipairs(obj.status.conditions) do
+      if condition.type == "Ready" then
+        if condition.status == "True" then
+          hs.status = "Healthy"
+          hs.message = condition.message or "Image is ready"
+          return hs
+        elseif condition.status == "False" then
+          hs.status = "Degraded"
+          hs.message = condition.message or "Image build failed"
+          return hs
+        end
+      end
+    end
+    hs.status = "Progressing"
+    hs.message = "Image is being built"
+    return hs
