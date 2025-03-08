@@ -1,6 +1,9 @@
-## [0.1.3] (2025-03-01)
-  
+## [0.1.3] (2025-03-04)
+
+  * Added an ArgoCD Custom Health Check for kpack.io/Image
+  * Added an ArgoCD notification (Trigger & Template) for kpack.io/Image in order to restart deployment after the image is built
   * Added kpack namespace
+  * Added bootstrap for kpack in Makefile
   * Refactored kpack setup accordingly
 
 ## [0.1.2] (2025-02-24)
