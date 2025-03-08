@@ -5,3 +5,15 @@ kubectl apply -f service_account/kpack_sa.yaml -n kpack
 kubectl apply -f cluster_store.yaml -n kpack
 kubectl apply -f cluster_stacks/schematic_base.yaml -n kpack
 kubectl apply -f cluster_builders/schematic_base.yaml -n kpack
+
+# Add a Custom Health Check for kpack.io/Image
+kubectl patch configmap/argocd-cm \
+  -n argocd \
+  --type merge \
+  --patch-file argocd/argocd-cm-patch.yaml
+
+# Add a Trigger and Template for kpack.io/Image
+kubectl patch configmap/argocd-notifications-cm \
+  -n argocd \
+  --type merge \
+  --patch-file argocd/argocd-notifications-cm-patch.yaml
