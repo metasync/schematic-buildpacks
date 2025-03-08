@@ -1,0 +1,32 @@
+data:
+  service.webhook.tekton-ci-image-built: |
+    url: https://tekton-ci.k8s.orb.local
+    headers:
+      - name: "Content-Type"
+        value: "application/json"
+      - name: "X-TektonCI-Event"
+        value: "image-built"
+  subscriptions: |
+    - recipients:
+      - tekton-ci-image-built
+      triggers:
+      - on-image-built
+  trigger.on-image-built: |
+    - description: Triggered when an Image resource is built.
+      oncePer: filter(app.status.resources, {.kind == "Image"})[0].health.message
+      send:
+        - notify-image-built
+      when: |
+        app.status.operationState.phase in ['Succeeded'] and
+        any(filter(app.status.resources, {.kind == "Image"}), {.health.status == "Healthy"})
+  template.notify-image-built: |
+    message: |
+      The Image resource for {{.app.metadata.namespace}}/{{.app.metadata.name}} is ready.
+    webhook:
+      tekton-ci-image-built:
+        method: POST
+        body: |
+          {
+            "argocd_app": "{{.app.metadata.name}}",
+            "argocd_namespace": "{{.app.metadata.namespace}}"
+          }
