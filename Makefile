@@ -60,6 +60,8 @@ install.pack_cli.linux:
 
 # Kpack operations
 
+bootstrap.kpack: install.kpack install.kp_cli setup.kpack
+
 install.kpack:
 	@curl -sSL -o /tmp/kpack-release-${KPACK_VERSION}.yaml https://github.com/buildpacks-community/kpack/releases/download/v${KPACK_VERSION}/release-${KPACK_VERSION}.yaml && \
 		kubectl apply -f /tmp/kpack-release-${KPACK_VERSION}.yaml && \
