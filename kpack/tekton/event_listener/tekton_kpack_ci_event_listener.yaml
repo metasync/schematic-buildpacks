@@ -1,0 +1,10 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: tekton-kpack-ci-eventlistener
+  namespace: tekton-ci
+spec:
+  serviceAccountName: tekton-ci-sa
+  triggers:
+    - triggerRef: image-built-trigger
+    - triggerRef: cluster-stack-update-trigger

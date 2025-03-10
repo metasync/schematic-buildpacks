@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# ArgoCD setup for kpack
+
+# Add a Custom Health Check for kpack.io/Image
+kubectl patch configmap/argocd-cm \
+  -n argocd \
+  --type merge \
+  --patch-file argocd_cm_patch.yaml
+
+# Add a Trigger and Template for kpack.io/Image
+kubectl patch configmap/argocd-notifications-cm \
+  -n argocd \
+  --type merge \
+  --patch-file argocd_notifications_cm_patch.yaml

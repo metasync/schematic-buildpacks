@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Tekton CI setup for kpack
+kubectl apply -f rbac/tekton_ci_kpack_clusterrole.yaml
+kubectl apply -f rbac/tekton_ci_kpack_clusterrole_binding.yaml
+kubectl apply -f tasks/patch_kpack_cluster_stack.yaml
+kubectl apply -f pipelines/update_kpack_cluster_stack_pipeline.yaml
+kubectl apply -f triggers/kpack_cluster_stack_update_trigger.yaml
+kubectl apply -f triggers/kpack_cluster_stack_update_trigger_template.yaml
+kubectl apply -f event_listener/tekton_kpack_ci_event_listener.yaml
+kubectl apply -f event_listener/tekton_kpack_ci_event_listener_ingress.yaml

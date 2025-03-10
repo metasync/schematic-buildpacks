@@ -1,0 +1,123 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: patch-kpack-cluster-stack-task
+  namespace: tekton-ci
+spec:
+  params:
+    - name: cluster-stack-name
+      description: Name of the kpack ClusterStack to patch
+      default: "schematic-base"
+    - name: base-image-type
+      description: Type of base (run or build) image to patch 
+      type: string
+    - name: image
+      description: Image to run the task
+      type: string
+      default: quay.io/metasync/gitops-cli:0.1.5-rel.0
+    - name: verbose
+      description: Log the commands that are executed
+      type: string
+      default: "false"
+  results:
+    - name: base-image
+      description: The base (run or build) image in the ClusterStack
+    - name: base-image-name
+      description: The image name extracted from the base image
+    - name: base-image-tag
+      description: The image tag extracted from the base image
+    - name: current-sha
+      description: The current SHA from the base image in ClusterStack
+    - name: newest-sha
+      description: The newest SHA retrieved from the image registry
+  stepTemplate:
+    env:
+      - name: VERBOSE
+        value: $(params.verbose)
+  steps:
+    - name: retrieve-base-image
+      image: $(params.image)
+      script: |
+        #!/bin/sh
+
+        if [ "${VERBOSE}" = "true" ] ; then
+          set -x
+        fi
+        set -e
+
+        cluster_stack_name=$(params.cluster-stack-name)
+        base_image_type=$(params.base-image-type)
+        base_image=$(kubectl get clusterstack ${cluster_stack_name} -o jsonpath="{.spec.${base_image_type}Image.image}")
+
+        if [ -z "$base_image" ]; then
+          echo "Failed to retrieve ${base_image_type} base image from ClusterStack: ${cluster_stack_name}"
+          exit 1
+        fi
+
+        echo "${base_image_type} base image: ${base_image}"
+        echo -n ${base_image} > $(results.base-image.path)
+
+        base_image_name=$(echo "${base_image}" | awk -F '@' '{print $1}' | awk -F ':' '{print $1}')
+        base_image_tag=$(echo "${base_image}" | awk -F '@' '{print $1}' | awk -F ':' '{print $2}')
+        echo -n "${base_image_name}" > $(results.base-image-name.path)
+        echo -n "${base_image_tag}" > $(results.base-image-tag.path)
+
+        current_sha=$(echo "${base_image}" | awk -F '@' '{print $2}')
+        echo -n ${current_sha} > $(results.current-sha.path)
+    - name: retrieve-newest-sha
+      image: $(params.image)
+      script: |
+        #!/bin/sh
+
+        if [ "${VERBOSE}" = "true" ] ; then
+          set -x
+        fi
+        set -e
+
+        base_image_name=$(cat $(results.base-image-name.path))
+        base_image_tag=$(cat $(results.base-image-tag.path))
+        newest_sha=$(skopeo inspect docker://${base_image_name}:${base_image_tag} | jq -r '.Digest')
+
+        if [ -z "$newest_sha" ]; then
+          echo "Failed to retrieve newest SHA digest for base image: ${base_image_name}:${base_image_tag}"
+          exit 1
+        fi
+
+        echo "Newest SHA digest: ${newest_sha}"
+        echo -n ${newest_sha} > $(results.newest-sha.path)
+    - name: patch-cluster-stack
+      image: $(params.image)
+      script: |
+        #!/bin/sh
+
+        if [ "${VERBOSE}" = "true" ] ; then
+          set -x
+        fi
+        set -e
+
+        cluster_stack_name=$(params.cluster-stack-name)
+        base_image_type=$(params.base-image-type)
+        base_image_name=$(cat $(results.base-image-name.path))
+        base_image_tag=$(cat $(results.base-image-tag.path))
+        current_sha=$(cat $(results.current-sha.path))
+        newest_sha=$(cat $(results.newest-sha.path))
+        
+        if [ -z "$current_sha" ]; then
+          echo "Current SHA is nil. Patching ClusterStack with new ${base_image_type} image SHA..."
+        elif [ "$current_sha" == "$newest_sha" ]; then
+          echo "SHA signatures are the same. No update needed."
+          exit 0
+        else
+          echo "SHA signatures differ. Updating ClusterStack with new ${base_image_type} image SHA..."
+        fi
+
+        new_base_image="${base_image_name}:${base_image_tag}@${newest_sha}"
+        kubectl patch clusterstack ${cluster_stack_name} --type=json \
+          -p="[{\"op\": \"replace\", \"path\": \"/spec/${base_image_type}Image/image\", \"value\": \"${new_base_image}\"}]"
+        if [ $? -eq 0 ]; then
+          echo "Successfully patched ClusterStack: ${cluster_stack_name}"
+          echo "--> New ${base_image_type} image: ${new_base_image}"
+        else
+          echo "Failed to patch ClusterStack: ${cluster_stack_name}"
+          exit 1
+        fi

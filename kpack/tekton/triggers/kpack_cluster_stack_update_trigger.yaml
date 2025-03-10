@@ -1,0 +1,19 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: cluster-stack-update-trigger
+  namespace: tekton-ci
+spec:
+  interceptors:
+    - ref: 
+        name: "cel"
+      params:
+        - name: "filter"
+          value: header.match('X-TektonCI-Event', 'cluster-stack-update')
+  bindings:
+    - name: cluster-stack-name
+      value: $(body.cluster_stack_name)
+    - name: base-image-type
+      value: $(body.base_image_type)
+  template:
+    ref: cluster-stack-update-trigger-template

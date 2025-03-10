@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-ci-sa-kpack-clusterbinding
+  namespace: tekton-ci
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-sa
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-ci-kpack-clusterrole

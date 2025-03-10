@@ -1,0 +1,26 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: cluster-stack-update-trigger-template
+  namespace: tekton-ci
+spec:
+  params:
+    - name: cluster-stack-name
+      description: Name of the kpack ClusterStack to patch
+    - name: base-image-type
+      description: Type of base (run or build) image to patch
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: update-kpack-cluster-stack-pipelinerun-
+        namespace: tekton-ci
+      spec:
+        serviceAccountName: tekton-ci-sa
+        pipelineRef:
+          name: update-kpack-cluster-stack-pipeline
+        params:
+          - name: cluster-stack-name
+            value: "$(tt.params.cluster-stack-name)"
+          - name: base-image-type
+            value: "$(tt.params.base-image-type)"
