@@ -1,3 +1,7 @@
+## [0.1.4] (2025-03-10)
+
+  * Added kpack support for updates of run/build base image in kpack ClusterStack 
+
 ## [0.1.3] (2025-03-04)
 
   * Added an ArgoCD Custom Health Check for kpack.io/Image
